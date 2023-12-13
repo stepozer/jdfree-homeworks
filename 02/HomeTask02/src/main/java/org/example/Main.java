@@ -1,19 +1,33 @@
 package org.example;
 
-// Press Shift twice to open the Search Everywhere dialog and type `show whitespaces`,
-// then press Enter. You can now see whitespace characters in your code.
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.example.NasaClient.NasaClient;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 public class Main {
-    public static void main(String[] args) {
-        // Press Alt+Enter with your caret at the highlighted text to see how
-        // IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
+    public static void main(String[] args) throws IOException {
+        var nasaClient = new NasaClient("xxx");
+        var picture = nasaClient.getAstronomyPictureOfTheDay();
+        var httpClient = HttpClientBuilder.create()
+                .setDefaultRequestConfig(
+                        RequestConfig.custom()
+                                .setConnectTimeout(5000)
+                                .setSocketTimeout(30000)
+                                .setRedirectsEnabled(false)
+                                .build()
+                )
+                .build();
+        String[] url = picture.getUrl().split("/");
+        String fileName = url[url.length - 1];
 
-        // Press Shift+F10 or click the green arrow button in the gutter to run the code.
-        for (int i = 1; i <= 5; i++) {
-
-            // Press Shift+F9 to start debugging your code. We have set one breakpoint
-            // for you, but you can always add more by pressing Ctrl+F8.
-            System.out.println("i = " + i);
-        }
+        var pictureFile = httpClient.execute(new HttpGet(picture.getUrl()));
+        var entity = pictureFile.getEntity();
+        var fos = new FileOutputStream("/var/www/java/jdfree-homeworks/02/HomeTask02/" + fileName);
+        entity.writeTo(fos);
+        fos.close();
     }
 }
